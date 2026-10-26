@@ -1,0 +1,96 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck and test
+        run: npm run check
+
+      - name: Verify package contents
+        run: npm pack --dry-run
+
+      - name: Smoke-test the standalone CLI
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          docs="$tmp/docs"
+          project="$tmp/project"
+          mkdir -p "$project"
+
+          node dist/cli.cjs init --root "$docs" --id example --name Example --prefix EX
+          if [ -e "$docs/tools" ]; then
+            echo "docs init unexpectedly wrote a docs/tools directory" >&2
+            exit 1
+          fi
+
+          node dist/cli.cjs --root "$docs" new --type design --status draft --title "Example design"
+          node dist/cli.cjs --root "$docs" new --type proposal --status draft --title "Example proposal"
+          node dist/cli.cjs --root "$docs" new --type decision --status proposed --title "Example decision"
+          node dist/cli.cjs --root "$docs" new --type record --status implemented --title "Example record"
+          node dist/cli.cjs --root "$docs" new --type report --status reference --title "Example report"
+          node dist/cli.cjs --root "$docs" new --type reference --status reference --title "Example reference"
+          node dist/cli.cjs --root "$docs" index
+          node dist/cli.cjs --root "$docs" check
+          node dist/cli.cjs --root "$docs" index --check
+
+          node dist/cli.cjs standard > "$tmp/standard.md"
+          cmp PROCESS.md "$tmp/standard.md"
+
+          skill="$project/.opencode/skills/project-docs"
+          node dist/cli.cjs install-skill --repo "$project"
+          test -f "$skill/SKILL.md"
+          test -f "$skill/references/PROCESS.md"
+          cmp PROCESS.md "$skill/references/PROCESS.md"
+
+          if node dist/cli.cjs install-skill --repo "$project"; then
+            echo "install-skill unexpectedly overwrote an existing installation" >&2
+            exit 1
+          fi
+          node dist/cli.cjs install-skill --repo "$project" --force
+
+          if node dist/cli.cjs init --root "$docs" --id other --name Other --prefix OT; then
+            echo "docs init unexpectedly accepted an existing docs root" >&2
+            exit 1
+          fi
+
+          force="$tmp/forced/docs"
+          mkdir -p "$force"
+          echo keep > "$force/keep.txt"
+          node dist/cli.cjs init --root "$force" --id forced --name Forced --prefix FO --force
+          test -f "$force/keep.txt"
+
+      - name: Lint Markdown
+        uses: DavidAnson/markdownlint-cli2-action@v25
+        with:
+          config: .github/markdownlint-cli2.yaml
+          globs: "**/*.md"
+
+      - name: Check links
+        uses: lycheeverse/lychee-action@v2.9.0
+        with:
+          args: --root-dir "$(pwd)" --offline --no-progress --exclude-path node_modules --exclude-path dist './**/*.md'
+          fail: true

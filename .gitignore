@@ -1,0 +1,40 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Node.js / TypeScript
+node_modules/
+dist/
+coverage/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+pnpm-debug.log*
+
+# npm pack artifacts
+*.tgz
+
+# Logs and temporary files
+*.log
+.tmp/
+tmp/
+
+# Local backups and raw copies
+backup/
+originals/
+*.bak
+*.orig
