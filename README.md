@@ -7,7 +7,7 @@ root.
 
 This repository is the framework itself. It is not a project documentation
 repository: it contains no project documents, no example docs root, and no
-project-specific facts. The current standard version is **1.0.0**.
+project-specific facts. The current standard version is **1.0.1**.
 
 ## What this repository provides
 
@@ -67,15 +67,15 @@ the proposal.
 Run the pinned CLI from npm:
 
 ```bash
-npx @jk-97/engineering-docs@1.0.0 init --root docs \
+npx @jk-97/engineering-docs@1.0.1 init --root docs \
   --id example --name Example --prefix EX \
   --summary "One sentence about the project."
 ```
 
-Before 1.0.0 is available on npm, use the same version from the GitHub tag:
+When a mirror has not synced, use the same version from the GitHub tag:
 
 ```bash
-npx github:JK-97/engineering-docs#v1.0.0 init --root docs \
+npx github:JK-97/engineering-docs#v1.0.1 init --root docs \
   --id example --name Example --prefix EX \
   --summary "One sentence about the project."
 ```
@@ -99,7 +99,7 @@ For one-off commands, run the pinned package with npx. For repeatable local use,
 add that exact version as a devDependency:
 
 ```bash
-npm install --save-dev --save-exact @jk-97/engineering-docs@1.0.0
+npm install --save-dev --save-exact @jk-97/engineering-docs@1.0.1
 npx engdocs --root docs check
 ```
 
@@ -110,7 +110,7 @@ the current directory. `--root` may appear before or after the subcommand.
 To read the standard that belongs to the pinned version, use `standard`:
 
 ```bash
-npx @jk-97/engineering-docs@1.0.0 standard
+npx @jk-97/engineering-docs@1.0.1 standard
 ```
 
 `standard` prints the exact `PROCESS.md` bytes shipped in that package version to
@@ -123,8 +123,8 @@ the docs root as project content.
 ### 4. Install the skill
 
 ```bash
-npx @jk-97/engineering-docs@1.0.0 install-skill
-npx @jk-97/engineering-docs@1.0.0 install-skill --repo /path/to/project
+npx @jk-97/engineering-docs@1.0.1 install-skill
+npx @jk-97/engineering-docs@1.0.1 install-skill --repo /path/to/project
 ```
 
 The first command installs at user level, under
@@ -144,9 +144,9 @@ Run the same pinned version in CI after installing Node.js 20 or newer and the
 project dependencies:
 
 ```bash
-npx --yes @jk-97/engineering-docs@1.0.0 --root docs index
-npx --yes @jk-97/engineering-docs@1.0.0 --root docs check
-npx --yes @jk-97/engineering-docs@1.0.0 --root docs index --check
+npx --yes @jk-97/engineering-docs@1.0.1 --root docs index
+npx --yes @jk-97/engineering-docs@1.0.1 --root docs check
+npx --yes @jk-97/engineering-docs@1.0.1 --root docs index --check
 ```
 
 `--yes` keeps npx non-interactive. `index` writes generated files; `check`
@@ -159,7 +159,7 @@ devDependency, the same commands can use `npx engdocs`.
 `init` writes the package version into `project.yaml`:
 
 ```yaml
-standard_version: 1.0.0
+standard_version: 1.0.1
 ```
 
 Keep the pinned devDependency and `standard_version` on the same exact version.
@@ -198,7 +198,7 @@ copy as source.
 > If npm is configured to use a mirror such as npmmirror/cnpm, a newly published
 > scoped version may not be synced yet. Run npx with
 > `NPM_CONFIG_REGISTRY=https://registry.npmjs.org` (for example,
-> `NPM_CONFIG_REGISTRY=https://registry.npmjs.org npx @jk-97/engineering-docs@1.0.0 ...`),
+> `NPM_CONFIG_REGISTRY=https://registry.npmjs.org npx @jk-97/engineering-docs@1.0.1 ...`),
 > or use the GitHub tag fallback. Publication and authentication, when needed,
 > must also target npmjs explicitly.
 
@@ -268,9 +268,9 @@ and is not source.
 
 ## Version
 
-The current standard version is **1.0.0**. `package.json` `version` is the single
+The current standard version is **1.0.1**. `package.json` `version` is the single
 source of truth for the framework and the standard. The npm package, CLI
-`--version` output, release tag `v1.0.0`, skill metadata, and the
+`--version` output, release tag `v1.0.1`, skill metadata, and the
 `standard_version` written by `init` all follow it.
 
 Projects pin `standard_version`; they do not follow the latest framework version

@@ -127,7 +127,8 @@ describe("repository guards", () => {
       files: string[];
       bin: Record<string, string>;
     };
-    expect(pkg.version).toBe("1.0.0");
+    expect(pkg.version).toMatch(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/);
+    expect(readText("README.md")).toContain(`**${pkg.version}**`);
     expect(pkg.files).toEqual([
       "dist",
       "PROCESS.md",

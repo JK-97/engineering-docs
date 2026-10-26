@@ -150,7 +150,7 @@ Templates are the canonical scaffolds:
 ## 6. Version and release
 
 `package.json` `version` is the single source of truth. The current version is
-`1.0.0`, and the release tag is `v1.0.0`. The npm package, CLI `--version`
+`1.0.1`, and the release tag is `v1.0.1`. The npm package, CLI `--version`
 output, README, skill metadata, and the `standard_version` written by `init`
 follow it.
 
@@ -167,10 +167,14 @@ Releases are tag-driven through `.github/workflows/release.yml`:
 
 1. Set `package.json.version` to the next semantic version.
 2. Commit and push `main`.
-3. Create and push the matching tag, for example `v1.0.0`.
+3. Create and push the matching tag, for example `v1.0.1`.
 4. The workflow verifies that the tag equals the package version, runs
    `npm run check`, inspects the package, and publishes with npm Trusted
    Publishing (OIDC) and provenance.
+
+A brand-new package must be bootstrapped once with an interactive
+`npm publish` (2FA) before its Trusted Publisher can be configured. After that
+first publish, all releases use the tag workflow.
 
 The npm trusted publisher must point at `JK-97/engineering-docs` and
 `release.yml`, and must allow direct `npm publish` (not staged-only). The
@@ -187,7 +191,7 @@ A scoped package is private by default, so `--access public` is required. If npm
 is configured for a mirror, use `https://registry.npmjs.org` for release
 commands; a mirror may lag behind a new version. Before npm publication, or when
 a mirror has not synced, the GitHub tag fallback
-`npx github:JK-97/engineering-docs#v1.0.0` installs the same tagged source.
+`npx github:JK-97/engineering-docs#v1.0.1` installs the same tagged source.
 Local `npm publish --registry=https://registry.npmjs.org --access public` is an
 emergency fallback only; it bypasses the tag workflow.
 

@@ -489,16 +489,16 @@ Rules:
 Run the pinned standard's validation before merging. From the repository root:
 
 ```bash
-npx @jk-97/engineering-docs@1.0.0 --root docs index --check
-npx @jk-97/engineering-docs@1.0.0 --root docs check
+npx @jk-97/engineering-docs@1.0.1 --root docs index --check
+npx @jk-97/engineering-docs@1.0.1 --root docs check
 ```
 
-Replace `1.0.0` with the project's `standard_version`. When the package is an
+Replace `1.0.1` with the project's `standard_version`. When the package is an
 exact devDependency, the local binary is equivalent:
 `npx engdocs --root docs index --check` and `npx engdocs --root docs check`.
 
 Print the standard used by that pin with
-`npx @jk-97/engineering-docs@1.0.0 standard`. Do not validate with a CLI copied
+`npx @jk-97/engineering-docs@1.0.1 standard`. Do not validate with a CLI copied
 into the repository; the docs root contains none.
 
 Validation covers at least:

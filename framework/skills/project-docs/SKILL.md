@@ -2,7 +2,7 @@
 name: project-docs
 description: Adopt, create, update, audit, archive, and index engineering documentation in a project that follows the engineering-docs standard. Use when initializing a docs root, adding or changing a design, proposal, decision, record, report, or reference, deciding whether work belongs in a GitHub Issue instead of a proposal, checking front matter, IDs, dates, links, supersession, or staleness, refreshing the skill, or regenerating catalog.json and llms.txt with the CLI. It does not create work-item trackers or plan directories.
 metadata:
-  standard_version: "1.0.0"
+  standard_version: "1.0.1"
 ---
 
 # Project Docs
@@ -133,9 +133,9 @@ copy its text.
 2. **Inspect before writing.**
 
    ```bash
-   npx @jk-97/engineering-docs@1.0.0 --root docs context
-   npx @jk-97/engineering-docs@1.0.0 --root docs list
-   npx @jk-97/engineering-docs@1.0.0 --root docs search <query>
+   npx @jk-97/engineering-docs@1.0.1 --root docs context
+   npx @jk-97/engineering-docs@1.0.1 --root docs list
+   npx @jk-97/engineering-docs@1.0.1 --root docs search <query>
    ```
 
    Reuse or update an existing document before adding a near-duplicate.
@@ -144,7 +144,7 @@ copy its text.
 4. **Scaffold with the CLI.** Do not invent an ID or hand-copy a template:
 
    ```bash
-   npx @jk-97/engineering-docs@1.0.0 --root docs new \
+   npx @jk-97/engineering-docs@1.0.1 --root docs new \
      --type <type> --status <status> --title "<title>"
    ```
 
@@ -165,8 +165,8 @@ copy its text.
 8. **Generate and validate.**
 
    ```bash
-   npx @jk-97/engineering-docs@1.0.0 --root docs index
-   npx @jk-97/engineering-docs@1.0.0 --root docs check
+   npx @jk-97/engineering-docs@1.0.1 --root docs index
+   npx @jk-97/engineering-docs@1.0.1 --root docs check
    ```
 
    Fix source files until `check` passes. Treat warnings as review work; do not
@@ -180,7 +180,7 @@ Pin the CLI to the project's `standard_version` and run it from the repository
 root:
 
 ```bash
-npx @jk-97/engineering-docs@1.0.0 --root docs <command>
+npx @jk-97/engineering-docs@1.0.1 --root docs <command>
 ```
 
 If the package is installed in the project, the local `engdocs` binary is
@@ -191,7 +191,7 @@ engdocs --root docs <command>
 ```
 
 `--root` may appear before or after the subcommand; `DOCS_ROOT=docs` is
-equivalent. Replace `1.0.0` with the pinned version when the project declares
+equivalent. Replace `1.0.1` with the pinned version when the project declares
 another one. A docs root contains documents only: the CLI, the standard, and
 the templates are never copied into it.
 
