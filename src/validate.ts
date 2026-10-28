@@ -441,6 +441,13 @@ function checkDesign(
         errors.push(`${doc.rel}: parent design does not exist: ${parent}`);
       } else if (target.meta.type !== "design") {
         errors.push(`${doc.rel}: parent is not a design: ${parent}`);
+      } else if (
+        doc.meta.status === "active" &&
+        target.meta.status === "superseded"
+      ) {
+        warnings.push(
+          `${doc.rel}: active design inherits from superseded parent ${parent}`,
+        );
       }
     }
   }
@@ -520,6 +527,7 @@ function checkProposal(
   doc: Doc,
   byId: Map<string, Doc>,
   errors: string[],
+  warnings: string[],
 ): void {
   const meta = doc.meta;
   const issue = meta.issue;
@@ -538,7 +546,18 @@ function checkProposal(
       errors.push(`${doc.rel}: issue must be a number, URL, or null`);
     }
   }
-  checkOptionalId(doc, "design", "DES", byId, errors);
+  const designId = checkOptionalId(doc, "design", "DES", byId, errors);
+  if (
+    typeof designId === "string" &&
+    ["draft", "active", "deferred"].includes(String(doc.meta.status))
+  ) {
+    const target = byId.get(designId);
+    if (target?.meta.status === "superseded") {
+      warnings.push(
+        `${doc.rel}: targets superseded design ${designId}; close or re-scope this proposal`,
+      );
+    }
+  }
   const trigger = meta.activation_trigger;
   if (trigger !== null && trigger !== undefined && !isText(trigger)) {
     errors.push(
@@ -986,7 +1005,7 @@ export function runCheck(): number {
         checkDesign(doc, byId, docs, errors, warnings);
         break;
       case "proposal":
-        checkProposal(doc, byId, errors);
+        checkProposal(doc, byId, errors, warnings);
         break;
       case "decision":
         checkDecision(doc, errors, warnings);

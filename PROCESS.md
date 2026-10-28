@@ -23,8 +23,10 @@ This standard takes precedence over project-local conventions.
    maintain a backlog, priorities, or schedules.
 3. **Design writes the present; proposal writes the future.** An implementation
    plan belongs to a proposal; there is no separate plan document.
-4. **History is immutable.** Express obsolescence with `superseded`; do not
-   delete or rewrite merged documents.
+4. **History is evidence, not a working set.** Express ordinary obsolescence
+   with `superseded`; do not delete or rewrite merged documents. A generation
+   reset (4.4) may remove an obsolete generation from the working tree only
+   after a boundary record and an annotated tag preserve it.
 5. **Dates are evidence.** Unknown is `null`; never infer a date from filesystem
    metadata.
 6. **English metadata, project-chosen prose.** Front matter keys, enums, IDs,
@@ -34,6 +36,12 @@ This standard takes precedence over project-local conventions.
 8. **Generated artifacts are not sources.** `catalog.json` and `llms.txt` are
    produced by the CLI and never edited by hand. The same applies to any
    generated copy of this standard.
+9. **Replace, do not accumulate.** A document that describes the present is
+   replaced when the present changes; a superseded document is history, not a
+   second current description. The active set does not grow by accretion.
+10. **One generation per docs root.** A major architecture change starts a new
+    generation: tag the old state, record the boundary, change the prefix, and
+    remove the old documents. A docs root never mixes generations.
 
 ## 2. Document Types
 
@@ -73,6 +81,10 @@ values for each type.
 | `report` | `reference` | research is complete and retained as reference |
 | `reference` | `reference` | the external snapshot is current |
 | `reference` | `superseded` | replaced by a newer snapshot |
+
+`superseded` replaces a document inside one generation. A generation reset does
+not use `superseded`; it removes the old generation and records the boundary
+(4.4).
 
 ## 4. Lifecycle
 
@@ -127,7 +139,8 @@ implemented --> update design (same change) --> record (cross-component or risky
 | `report` | `reference` | `reference` (terminal) | not superseded; create a new report and cross-link when findings change | re-check sources when cited |
 | `reference` | `reference` | `reference` | `superseded` (replaced by a newer snapshot) | re-check when the source changes |
 
-- Terminal states do not move backward; merged documents are never deleted.
+- Terminal states do not move backward; merged documents are never deleted in
+  ordinary work. A generation reset removes the old generation under 4.4.
 - Supersession is reciprocal: the new document lists `supersedes`, and the old
   document has `status: superseded` and `superseded_by`. See Section 18.
 - `record` and `report` are historical and are not superseded. A merged
@@ -135,6 +148,93 @@ implemented --> update design (same change) --> record (cross-component or risky
 - The 90-day threshold used by `check` and `stale` is a reminder. The formal
   design review cycle is 6 months; an active proposal with no progress for 90
   days must be closed or deferred.
+
+### 4.3 Pivots and Partial Delivery
+
+A pivot is a change that invalidates the architecture a document was written
+against: boundaries, interfaces, or data flow are replaced, not merely
+extended. When a pivot lands while documents are incomplete, the old work is
+closed; it is not finished and not carried forward.
+
+1. **Stop.** Do not complete sections that the pivot made obsolete.
+2. **Extract what shipped.** Move delivered, verified behavior into the target
+   design as present-state prose, with its commit or PR. If the delivered slice
+   now belongs to its own boundary, give it a standalone design; do not leave it
+   as a residual section of the old document.
+3. **Drop what did not ship.** Do not carry over plan steps, option analysis,
+   draft prose, TODOs, or "future work" for undelivered scope. If a requirement
+   still applies, write it fresh in a new proposal against the new design. If it
+   does not, record one line in the old document's result.
+4. **Close the old document.** A proposal with a successor is `superseded`; a
+   proposal with no surviving scope is `withdrawn`; an unmerged draft may be
+   deleted. A design is replaced by a standalone successor and `superseded`. A
+   proposal's `result` states delivered, evidence, dropped, and why.
+5. **Validate.** No non-terminal proposal may target a superseded design; no
+   active design may keep a change-history or legacy section; `index` and
+   `check` pass.
+
+A pivot is not a generation reset (4.4). Use a pivot when the architecture
+survives in part; use a reset when most of the working set no longer describes
+the system.
+
+### 4.4 Generation Reset
+
+A generation reset replaces the working set when a major architecture change
+makes most current documents misleading. It is not cleanup for a few stale
+files, and not a way to avoid review.
+
+A reset is justified when at least one is true:
+
+- more than half of the active designs no longer describe the system;
+- the primary boundaries or interfaces are replaced rather than evolved;
+- the project deliberately starts a new architecture generation, such as a
+  rewrite.
+
+A feature, a component rewrite inside existing boundaries, or a migration that
+preserves the architecture does not justify a reset. Supersede the affected
+documents instead (4.3).
+
+Procedure:
+
+1. **Freeze.** Stop writing documents that the new architecture invalidates.
+2. **Tag the old state.** Run `index --check` and `check`; archive only a
+   valid old generation. Before editing, create an annotated tag `docs-gen-<n>`
+   on the last commit of the old generation. The tag is the archive; a reset
+   without a tag is not allowed.
+3. **Change the generation marker.** Set `project.yaml.prefix` to a new, unused
+   prefix. The old prefix stays reserved to the old generation, so IDs are
+   never reused.
+4. **Extract the present.** Write the new generation's designs from the new
+   architecture. Carry a fact over only if it is still true; rewrite it in the
+   new design or re-create the document under the new prefix. Carry over
+   binding decisions and still-current references the same way; do not silently
+   drop a constraint that still applies. Do not copy old prose wholesale.
+5. **Write the boundary record.** Create a `record` under the new prefix that
+   names the old generation tag, the old and new prefixes, every removed ID
+   with its outcome, the carried-over mappings, and the reset commits and
+   verification. This record is the audit link.
+6. **Classify and remove the old working set.** Mark every old document carried
+   over, replaced, or dropped. Unfinished plans, options, draft sections, and
+   obsolete references are dropped. Update the docs-root README and remaining
+   links. Delete the old documents, links, assets, and generated files that no
+   longer serve the new generation; do not leave stubs, legacy folders, or
+   empty sections.
+7. **Regenerate and validate.** Run `index` and `check`. A leftover
+   old-prefix document fails validation. Review the diff as a generation
+   boundary, not as an ordinary edit.
+
+Rules:
+
+- One docs root contains exactly one generation.
+- The boundary record and the annotated tag are mandatory. Without them, the
+  change is a deletion, not a reset.
+- Commit the old generation before tagging; uncommitted work is not archived.
+- A reset carries no unfinished work forward. Surviving scope is written fresh
+  in the new generation.
+- The old generation stays readable through the tag; do not copy it back into
+  the docs root.
+- A reset does not use `supersedes`: the old documents are gone and cannot
+  reciprocate. The boundary record and tag are the link.
 
 ## 5. When to Write Which
 
@@ -144,6 +244,9 @@ implemented --> update design (same change) --> record (cross-component or risky
 | Change behavior across components, interfaces, or trade-offs | open an Issue and write a proposal |
 | Defect, copy change, dependency update, one-PR change | Issue only; update the design if the present changed |
 | Incident or failure handling | track in an Issue; write a record afterwards |
+| Major architecture change while documents are incomplete | pivot (4.3): extract delivered work, drop the rest |
+| Major architecture change that invalidates most of the working set | generation reset (4.4) |
+| A few stale documents after a change | supersede only those documents |
 | Hard-to-reverse choice between options | write a decision |
 | Investigation, benchmark, or option comparison | write a report |
 | External spec, third-party document, long prompt | store a reference |
@@ -182,6 +285,11 @@ with `proposal.issue`; do not copy the Issue text.
   change lands.
 - Split signal: when `owns` contains two nouns that evolve independently and are
   driven by different changes, split the design.
+- A successor design stands alone: it describes the new present in full and does
+  not require the superseded design to be understood. Do not add "changes
+  since", migration history, or legacy sections to a current design.
+- After a generation reset, write designs for the new generation; do not carry
+  old prose, old IDs, or old `supersedes` links forward (4.4).
 
 ## 7. Proposal Rules
 
@@ -200,6 +308,14 @@ with `proposal.issue`; do not copy the Issue text.
   deviation in the result section or a record.
 - Conditions for `implemented`: code merged, target design updated, result
   filled.
+- A proposal does not outlive its architecture. If its target design is
+  superseded or its premise no longer holds, close it under 4.3 instead of
+  extending the plan.
+- Partial delivery followed by a pivot is not `implemented`. Use `superseded`
+  when a successor exists and `withdrawn` when nothing survives; state what was
+  delivered and what was dropped in `result`.
+- A generation reset rewrites surviving scope as a new proposal; it does not
+  carry old plan steps forward (4.4).
 
 ## 8. Decision Rules (ADR)
 
@@ -226,6 +342,11 @@ with `proposal.issue`; do not copy the Issue text.
 - Do not write a record for a small change. One change, one record; related
   changes may be combined into one initiative if commits and evidence are
   complete.
+- A record covers delivered, verified work only. Do not write a record for a
+  plan that was dropped.
+- A generation reset requires a boundary record under the new prefix; it lists
+  the removed generation, the old tag, every removed ID, and the carried-over
+  mappings (4.4).
 
 ## 10. Report Rules
 
@@ -293,9 +414,12 @@ copy of this standard, the CLI, or the templates.
 
 - ID format: `<PREFIX>-<TYPE>-<NNN>`; `TYPE` is `DES`, `PROP`, `ADR`, `REC`,
   `RPT`, or `REF`; `NNN` is at least three digits.
-- Numbers increment per project and type. `000` is reserved and must not be used
-  for a project document; real documents start at `001`. `check` rejects `000`.
-  Do not reuse or renumber.
+- Numbers increment per generation and type. `000` is reserved and must not be
+  used for a project document; real documents start at `001`. `check` rejects
+  `000`. Do not reuse or renumber.
+- The prefix is the generation marker. A generation reset changes
+  `project.yaml.prefix`; the old prefix stays reserved to the old generation, so
+  IDs are never reused across generations (4.4).
 - Document filenames are ASCII kebab-case, describe the topic, and need not
   match the ID. One document, one file.
 - Images and data go under `<docs-root>/assets/` in topic subdirectories and are
@@ -306,8 +430,10 @@ copy of this standard, the CLI, or the templates.
 - Do not write secrets, credentials, or raw customer data; redact or aggregate.
 - Do not copy old or external documents wholesale; rewrite into a standard type
   and put the source in a reference or a date source.
-- Do not delete merged documents. Express errors, obsolescence, and replacement
-  through `superseded` and links.
+- Do not delete merged documents in ordinary work. Express errors,
+  obsolescence, and replacement through `superseded` and links. The only
+  exception is a generation reset (4.4), which requires a boundary record and an
+  annotated tag.
 - `catalog.json` and `llms.txt` are generated artifacts; they are not documents
   and carry no IDs.
 
@@ -319,6 +445,8 @@ Replacement locations:
 | Ideas, backlog, schedule | GitHub Issue; a detailed future idea may become a deferred proposal |
 | Raw copies, historical backups | not kept; git history is the archive |
 | Full old versions | not kept; use `supersedes`/`superseded_by` links |
+| A generation that no longer describes the system | generation reset: tag, boundary record, new prefix (4.4) |
+| Unfinished work after an architecture change | not carried over; one line in the boundary record or result |
 
 ## 14. Front Matter
 
@@ -371,6 +499,8 @@ Rules:
   sentence and must not be empty.
 - `parent`, `design`, and `proposal` reference the correct type or are `null`.
 - `related` IDs must exist; supersession must be reciprocal and acyclic.
+- A generation boundary is recorded in the boundary record, not with
+  `supersedes`; deleted generations cannot reciprocate (4.4).
 
 ## 15. Adoption and Version
 
@@ -402,6 +532,9 @@ Rules:
 - One docs root describes exactly one project; do not add project lists,
   aggregate catalogs, or cross-project indexes.
 - Projects may add local conventions but must not violate this standard.
+- A generation reset is a project decision, not a standard upgrade:
+  `standard_version` stays unchanged, the prefix changes, and the boundary
+  record is written under the new prefix (4.4).
 - Minimum for a new root: `project.yaml`, at least one `active` design, and
   regenerated indexes. `init` creates only a draft overview; complete it and set
   it to `active`.
@@ -444,6 +577,11 @@ Rules:
 
 - `catalog.json` and `llms.txt` are generated from front matter at the docs
   root; `catalog.json` uses `schema_version: 2`.
+- `llms.txt` lists current documents first and groups history (`superseded`,
+  `rejected`, `withdrawn`) under a final history heading. History is not current
+  guidance.
+- A generation reset deletes and regenerates both files; the old generation's
+  generated files remain in the tagged commit (4.4).
 - **Never hand-edit generated files.** They are not authoritative; source
   documents are. On conflict, fix the documents and regenerate.
 - Regenerate after changing an ID, path, title, summary, status, or project
@@ -465,6 +603,10 @@ Rules:
 - Mechanical checks are in Section 19; review focuses on one fact one home,
   state evidence, and cross-document consistency.
 - A `standard_version` change is reviewed as an explicit upgrade (Section 15).
+- A generation reset PR states the old tag, old and new prefix, every removed
+  ID, the carried-over mappings, and the boundary record ID. Reviewers verify
+  that no unfinished work was carried over and that the tag points at the last
+  commit of the old generation (4.4).
 - Do not merge a PR that violates Section 13, fabricates dates, includes
   unmarked raw copies, or hand-edits generated files.
 
@@ -480,7 +622,10 @@ Rules:
   without rewriting history.
 - Supersession is reciprocal: the new document has `supersedes: <old ID>`; the
   old document has `status: superseded` and `superseded_by: <new ID>`.
-- Only an unmerged mistaken file may be deleted; merged documents are kept.
+- Supersession is for change inside one generation. A generation reset replaces
+  the working set and uses the boundary record and tag instead (4.4).
+- Only an unmerged mistaken file, or an old generation removed by a reset under
+  4.4, may be deleted; otherwise merged documents are kept.
 - `check` and `stale` use 90 days as a reminder. The formal design review cycle
   is 6 months; the 90-day proposal rule is about progress, not `last_verified`.
 
@@ -489,16 +634,16 @@ Rules:
 Run the pinned standard's validation before merging. From the repository root:
 
 ```bash
-npx @jk-97/engineering-docs@1.0.1 --root docs index --check
-npx @jk-97/engineering-docs@1.0.1 --root docs check
+npx @jk-97/engineering-docs@1.1.0 --root docs index --check
+npx @jk-97/engineering-docs@1.1.0 --root docs check
 ```
 
-Replace `1.0.1` with the project's `standard_version`. When the package is an
+Replace `1.1.0` with the project's `standard_version`. When the package is an
 exact devDependency, the local binary is equivalent:
 `npx engdocs --root docs index --check` and `npx engdocs --root docs check`.
 
 Print the standard used by that pin with
-`npx @jk-97/engineering-docs@1.0.1 standard`. Do not validate with a CLI copied
+`npx @jk-97/engineering-docs@1.1.0 standard`. Do not validate with a CLI copied
 into the repository; the docs root contains none.
 
 Validation covers at least:
@@ -511,6 +656,8 @@ Validation covers at least:
   supersession;
 - required type-specific fields and enum values;
 - no forbidden paths and no escaped relative links;
+- one generation per root: IDs match `project.yaml.prefix`, so a leftover
+  old-generation document fails;
 - regenerable indexes that match the documents.
 
 `check` treats a missing `standard_version` as a warning, a non-semantic version

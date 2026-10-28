@@ -7,13 +7,13 @@ root.
 
 This repository is the framework itself. It is not a project documentation
 repository: it contains no project documents, no example docs root, and no
-project-specific facts. The current standard version is **1.0.1**.
+project-specific facts. The current standard version is **1.1.0**.
 
 ## What this repository provides
 
 - **A standard.** [PROCESS.md](PROCESS.md) defines the six document types,
   type-specific statuses, lifecycle, front matter, dates, IDs, directories,
-  review, staleness, supersession, and validation.
+  review, staleness, supersession, generation resets, and validation.
 - **A CLI.** `@jk-97/engineering-docs` creates a docs root, scaffolds documents,
   validates metadata and links, finds stale documents, archives superseded
   documents, and regenerates `catalog.json` and `llms.txt`.
@@ -60,6 +60,19 @@ coordination across people or teams.
 Link the Issue and the proposal through `issue`; do not copy the Issue text into
 the proposal.
 
+### Change of direction
+
+Ordinary change supersedes a document: the old one stays as history and leaves
+the active reading set. A major architecture change may instead reset the
+generation. Tag the last old commit as `docs-gen-<n>`, change
+`project.yaml.prefix`, write a boundary record with the old and new prefixes and
+every removed ID, remove the old documents and obsolete assets, and write only
+the current generation. The docs root never mixes generations, and IDs are never
+reused because the prefix changes.
+
+A generation reset is reviewed as a boundary, not as cleanup. A few stale
+documents are superseded, not reset; unfinished work is never carried forward.
+
 ## Adoption
 
 ### 1. Initialize the docs root
@@ -67,7 +80,7 @@ the proposal.
 Run the pinned CLI from npm:
 
 ```bash
-npx @jk-97/engineering-docs@1.0.1 init --root docs \
+npx @jk-97/engineering-docs@1.1.0 init --root docs \
   --id example --name Example --prefix EX \
   --summary "One sentence about the project."
 ```
@@ -75,7 +88,7 @@ npx @jk-97/engineering-docs@1.0.1 init --root docs \
 When a mirror has not synced, use the same version from the GitHub tag:
 
 ```bash
-npx github:JK-97/engineering-docs#v1.0.1 init --root docs \
+npx github:JK-97/engineering-docs#v1.1.0 init --root docs \
   --id example --name Example --prefix EX \
   --summary "One sentence about the project."
 ```
@@ -99,7 +112,7 @@ For one-off commands, run the pinned package with npx. For repeatable local use,
 add that exact version as a devDependency:
 
 ```bash
-npm install --save-dev --save-exact @jk-97/engineering-docs@1.0.1
+npm install --save-dev --save-exact @jk-97/engineering-docs@1.1.0
 npx engdocs --root docs check
 ```
 
@@ -110,7 +123,7 @@ the current directory. `--root` may appear before or after the subcommand.
 To read the standard that belongs to the pinned version, use `standard`:
 
 ```bash
-npx @jk-97/engineering-docs@1.0.1 standard
+npx @jk-97/engineering-docs@1.1.0 standard
 ```
 
 `standard` prints the exact `PROCESS.md` bytes shipped in that package version to
@@ -123,8 +136,8 @@ the docs root as project content.
 ### 4. Install the skill
 
 ```bash
-npx @jk-97/engineering-docs@1.0.1 install-skill
-npx @jk-97/engineering-docs@1.0.1 install-skill --repo /path/to/project
+npx @jk-97/engineering-docs@1.1.0 install-skill
+npx @jk-97/engineering-docs@1.1.0 install-skill --repo /path/to/project
 ```
 
 The first command installs at user level, under
@@ -144,9 +157,9 @@ Run the same pinned version in CI after installing Node.js 20 or newer and the
 project dependencies:
 
 ```bash
-npx --yes @jk-97/engineering-docs@1.0.1 --root docs index
-npx --yes @jk-97/engineering-docs@1.0.1 --root docs check
-npx --yes @jk-97/engineering-docs@1.0.1 --root docs index --check
+npx --yes @jk-97/engineering-docs@1.1.0 --root docs index
+npx --yes @jk-97/engineering-docs@1.1.0 --root docs check
+npx --yes @jk-97/engineering-docs@1.1.0 --root docs index --check
 ```
 
 `--yes` keeps npx non-interactive. `index` writes generated files; `check`
@@ -159,7 +172,7 @@ devDependency, the same commands can use `npx engdocs`.
 `init` writes the package version into `project.yaml`:
 
 ```yaml
-standard_version: 1.0.1
+standard_version: 1.1.0
 ```
 
 Keep the pinned devDependency and `standard_version` on the same exact version.
@@ -198,7 +211,7 @@ copy as source.
 > If npm is configured to use a mirror such as npmmirror/cnpm, a newly published
 > scoped version may not be synced yet. Run npx with
 > `NPM_CONFIG_REGISTRY=https://registry.npmjs.org` (for example,
-> `NPM_CONFIG_REGISTRY=https://registry.npmjs.org npx @jk-97/engineering-docs@1.0.1 ...`),
+> `NPM_CONFIG_REGISTRY=https://registry.npmjs.org npx @jk-97/engineering-docs@1.1.0 ...`),
 > or use the GitHub tag fallback. Publication and authentication, when needed,
 > must also target npmjs explicitly.
 
@@ -216,7 +229,7 @@ copy as source.
 | `index` | Generate `catalog.json` and `llms.txt`. |
 | `check` | Validate the docs root and report warnings. |
 | `stale` | List documents due for review. |
-| `archive` | Mark a document superseded by another. |
+| `archive` | Mark a document superseded by another in the same generation. |
 | `install-skill` | Install or refresh the `project-docs` skill. |
 
 Most commands operate on one docs root. `standard` and `install-skill` act on
@@ -268,9 +281,9 @@ and is not source.
 
 ## Version
 
-The current standard version is **1.0.1**. `package.json` `version` is the single
+The current standard version is **1.1.0**. `package.json` `version` is the single
 source of truth for the framework and the standard. The npm package, CLI
-`--version` output, release tag `v1.0.1`, skill metadata, and the
+`--version` output, release tag `v1.1.0`, skill metadata, and the
 `standard_version` written by `init` all follow it.
 
 Projects pin `standard_version`; they do not follow the latest framework version
@@ -278,6 +291,10 @@ automatically. Changes to document types, required front matter, status sets, or
 the generated-index schema are breaking and require a major version and
 migration notes in [PROCESS.md](PROCESS.md). Publication is a separate, explicit
 step against npmjs.
+
+1.1.0 adds pivot and generation-reset rules, groups history in `llms.txt`, and
+warns when a proposal targets a superseded design. It adds no document types,
+required front matter, statuses, or index schema changes.
 
 ## Framework maintenance
 

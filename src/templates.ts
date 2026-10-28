@@ -142,6 +142,7 @@ Any harness (OpenCode, Codex, Claude Code, etc.) reads this directory, the insta
 ## Conventions
 
 - Work items, defects, and scheduling go to GitHub Issues; implementation plans go to proposals.
+- An ordinary change supersedes documents; a major architecture change uses a generation reset with an annotated tag, a boundary record, and a new prefix. Never mix generations in this root.
 - Run the commands below from the repository root; \`--root docs\` selects this docs root.
 - Create documents with \`npx @jk-97/engineering-docs@${version} --root docs new --type <type> --status <status> --title "<title>"\`.
 - Validate with \`npx @jk-97/engineering-docs@${version} --root docs index --check\` and \`npx @jk-97/engineering-docs@${version} --root docs check\`.

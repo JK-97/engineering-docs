@@ -66,9 +66,12 @@ rewrite `PROCESS.md` to match a convenient implementation.
 - **Generated files are not source.** `dist/cli.cjs`, project `catalog.json` and
   `llms.txt`, and installed `references/PROCESS.md` are generated. Never edit
   them by hand, and never commit generated output.
-- **History is immutable.** Do not weaken `check` rules for forbidden
+- **History is evidence.** Do not weaken `check` rules for forbidden
   directories, backup files, fabricated dates, or stale indexes. Do not delete a
-  merged document; supersede it with reciprocal links.
+  merged document in ordinary work; supersede it with reciprocal links. A
+  generation reset is the only deletion path: it requires an annotated
+  `docs-gen-<n>` tag and a boundary record, and it removes an entire old
+  generation from the working tree.
 - **No project facts.** Framework files, templates, and the skill use
   placeholders such as `<project-id>` and `<PREFIX>`, never a real project.
 - **English framework text.** The standard, skill, templates, source, tests, and
@@ -135,6 +138,9 @@ installation, together with the generated `references/PROCESS.md`.
   The file does not exist in git, so a link would fail the offline link check.
 - The skill contains no project facts, no vendored CLI path, and no `tools/`
   directory under a docs root.
+- The skill explains pivots and generation resets: extract delivered work, drop
+  unfinished work, and require an annotated tag plus a boundary record for a
+  reset.
 
 Templates are the canonical scaffolds:
 
@@ -150,7 +156,7 @@ Templates are the canonical scaffolds:
 ## 6. Version and release
 
 `package.json` `version` is the single source of truth. The current version is
-`1.0.1`, and the release tag is `v1.0.1`. The npm package, CLI `--version`
+`1.1.0`, and the release tag is `v1.1.0`. The npm package, CLI `--version`
 output, README, skill metadata, and the `standard_version` written by `init`
 follow it.
 
@@ -167,7 +173,7 @@ Releases are tag-driven through `.github/workflows/release.yml`:
 
 1. Set `package.json.version` to the next semantic version.
 2. Commit and push `main`.
-3. Create and push the matching tag, for example `v1.0.1`.
+3. Create and push the matching tag, for example `v1.1.0`.
 4. The workflow verifies that the tag equals the package version, runs
    `npm run check`, inspects the package, and publishes with npm Trusted
    Publishing (OIDC) and provenance.
@@ -191,7 +197,7 @@ A scoped package is private by default, so `--access public` is required. If npm
 is configured for a mirror, use `https://registry.npmjs.org` for release
 commands; a mirror may lag behind a new version. Before npm publication, or when
 a mirror has not synced, the GitHub tag fallback
-`npx github:JK-97/engineering-docs#v1.0.1` installs the same tagged source.
+`npx github:JK-97/engineering-docs#v1.1.0` installs the same tagged source.
 Local `npm publish --registry=https://registry.npmjs.org --access public` is an
 emergency fallback only; it bypasses the tag workflow.
 

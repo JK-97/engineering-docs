@@ -17,6 +17,11 @@ export function cmdArchive(args: ArchiveArgs): number {
   if (doc.id === replacement.id) {
     throw new UsageError("a document cannot supersede itself");
   }
+  if (doc.id.split("-")[0] !== replacement.id.split("-")[0]) {
+    throw new UsageError(
+      `${doc.id}: documents from different generations cannot be linked with supersedes; use a generation reset`,
+    );
+  }
   const docType = String(doc.meta.type ?? "");
   const replacementType = String(replacement.meta.type ?? "");
   if (!(docType in SUPERSEDE_ALLOWED)) {

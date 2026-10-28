@@ -26,6 +26,16 @@ import {
   relpath,
 } from "./util";
 
+const HISTORY_STATUSES = new Set(["superseded", "rejected", "withdrawn"]);
+
+function llmsDocLine(doc: Record<string, unknown>): string {
+  const docSummary = String(doc.summary ?? "");
+  const suffix = docSummary ? ` - ${mdText(docSummary)}` : "";
+  return `- [${String(doc.id ?? "")} - ${mdText(doc.title ?? doc.id ?? "")}](${String(
+    doc.path ?? "",
+  )}) - ${String(doc.type ?? "")} - ${String(doc.status ?? "")}${suffix}`;
+}
+
 function entryText(
   meta: Record<string, unknown>,
   key: string,
@@ -396,21 +406,29 @@ export function buildLlms(catalog: Record<string, unknown>): string {
     // Missing README: omit the overview entry.
   }
   const docs = (project.docs as Record<string, unknown>[]) ?? [];
+  const current = docs.filter(
+    (doc) => !HISTORY_STATUSES.has(String(doc.status ?? "")),
+  );
+  const history = docs.filter((doc) =>
+    HISTORY_STATUSES.has(String(doc.status ?? "")),
+  );
   for (const type of TYPES) {
-    const typed = docs.filter((doc) => doc.type === type);
+    const typed = current.filter((doc) => doc.type === type);
     if (typed.length === 0) {
       continue;
     }
     lines.push(`### ${TYPE_LABELS[type]}`);
     lines.push("");
     for (const doc of typed) {
-      const docSummary = String(doc.summary ?? "");
-      const suffix = docSummary ? ` - ${mdText(docSummary)}` : "";
-      lines.push(
-        `- [${String(doc.id ?? "")} - ${mdText(doc.title ?? doc.id ?? "")}](${String(
-          doc.path ?? "",
-        )}) - ${String(doc.type ?? "")} - ${String(doc.status ?? "")}${suffix}`,
-      );
+      lines.push(llmsDocLine(doc));
+    }
+    lines.push("");
+  }
+  if (history.length > 0) {
+    lines.push("### History (not current guidance)");
+    lines.push("");
+    for (const doc of history) {
+      lines.push(llmsDocLine(doc));
     }
     lines.push("");
   }

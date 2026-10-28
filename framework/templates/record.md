@@ -6,7 +6,9 @@
 
 ## Change
 
-<!-- What actually changed: behavior, interfaces, data, configuration, and operations. -->
+<!-- What actually changed: behavior, interfaces, data, configuration, and
+     operations. For a generation reset, name the old tag, the old and new
+     prefixes, every removed ID, and the carried-over mappings. -->
 
 ## Key Implementation Decisions
 
@@ -26,4 +28,5 @@
 
 ## Follow-Ups
 
-<!-- Remaining issues and known risks; link Issues instead of writing plan steps. -->
+<!-- Remaining issues and known risks; link Issues instead of writing plan
+     steps. Do not carry forward steps from an abandoned plan. -->

@@ -1,5 +1,8 @@
 # {{title}}
 
+<!-- Describe the present only. When the architecture changes, write a
+     standalone successor; do not append a change history. -->
+
 ## Responsibilities and Boundaries
 
 <!-- What this context solves, in present tense. Keep it consistent with scope, owns, and does_not_own. -->

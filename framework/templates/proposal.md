@@ -30,7 +30,8 @@
 
 ## Implementation Plan
 
-<!-- The only plan location. Give each step a verification method. -->
+<!-- The only plan location. Give each step a verification method. If a pivot
+     invalidates the plan, close this proposal instead of extending it. -->
 - [ ] Step one: ...; verification: ...
 - [ ] Step two: ...; verification: ...
 
@@ -44,4 +45,6 @@
 
 ## Result
 
-<!-- Filled after implemented or rejected: actual result, deviations, and follow-ups. -->
+<!-- Filled after implemented, rejected, withdrawn, or superseded. On a pivot,
+     list what shipped with evidence, then one line for what was dropped and
+     why. Do not carry the abandoned plan forward. -->

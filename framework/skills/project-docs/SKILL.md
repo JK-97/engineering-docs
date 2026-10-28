@@ -1,8 +1,8 @@
 ---
 name: project-docs
-description: Adopt, create, update, audit, archive, and index engineering documentation in a project that follows the engineering-docs standard. Use when initializing a docs root, adding or changing a design, proposal, decision, record, report, or reference, deciding whether work belongs in a GitHub Issue instead of a proposal, checking front matter, IDs, dates, links, supersession, or staleness, refreshing the skill, or regenerating catalog.json and llms.txt with the CLI. It does not create work-item trackers or plan directories.
+description: Adopt, create, update, audit, archive, and index engineering documentation in a project that follows the engineering-docs standard. Use when initializing a docs root, adding or changing a design, proposal, decision, record, report, or reference, deciding whether work belongs in a GitHub Issue instead of a proposal, re-scoping after a major architecture change, resetting an obsolete docs generation, checking front matter, IDs, dates, links, supersession, or staleness, refreshing the skill, or regenerating catalog.json and llms.txt with the CLI. It does not create work-item trackers or plan directories.
 metadata:
-  standard_version: "1.0.1"
+  standard_version: "1.1.0"
 ---
 
 # Project Docs
@@ -42,6 +42,8 @@ different version, and do not invent rules.
 | §2 | document types |
 | §3 | status |
 | §4 | lifecycle |
+| §4.3 | pivots and partial delivery |
+| §4.4 | generation reset |
 | §5 | when to write which |
 | §6 | design rules |
 | §7 | proposal rules |
@@ -67,8 +69,13 @@ different version, and do not invent rules.
   directories.
 - **Generated files are not source.** `catalog.json` and `llms.txt` come from
   the CLI and are never edited by hand.
-- **Never delete a merged document.** Supersede it with reciprocal
-  `supersedes` / `superseded_by` links; git history is the archive.
+- **Never delete a merged document in ordinary work.** Supersede it with
+  reciprocal `supersedes` / `superseded_by` links; git history is the archive. A
+  generation reset is the only exception: it requires an annotated tag and a
+  boundary record, and it leaves no old-generation document in the root.
+- **Replace, do not accumulate.** A document that describes the present is
+  replaced when the present changes. A superseded document is history, not a
+  second current description.
 - **Dates are evidence.** Unknown is `null`; never infer a date from filesystem
   metadata.
 - **No secrets or raw customer data.** Summarize, aggregate, or redact.
@@ -126,53 +133,104 @@ copy its text.
 5. **Close** — fill the proposal's result, set it to `implemented`, link the
    merged PR or commit, close the Issue, then run `index` and `check`.
 
+## Pivots and generation resets
+
+A major architecture change is not an ordinary edit. Do not finish an obsolete
+document and do not carry it forward. Choose one of two responses.
+
+**Partial pivot: the architecture survives in part.**
+
+1. Stop writing sections that the change made obsolete.
+2. Move delivered, verified behavior into the target design as present-state
+   prose. If the delivered slice now belongs to its own boundary, give it a
+   standalone design.
+3. Drop undelivered plan steps, options, draft prose, and TODOs. Re-propose only
+   scope that still applies; otherwise record one line in the proposal `result`.
+4. Close the old document: `superseded` with a successor, `withdrawn` with no
+   surviving scope, or delete an unmerged draft.
+5. Run `index` and `check`.
+
+**Generation reset: most of the working set is obsolete.**
+
+Use this only when more than half of the active designs no longer describe the
+system, primary boundaries or interfaces are replaced, or the project
+deliberately starts a new architecture generation. A feature, an internal
+rewrite, or a migration that preserves the architecture does not qualify.
+
+1. Freeze the old generation. Stop writing documents that the new architecture
+   invalidates.
+2. Run `index --check` and `check`; archive only a valid old generation. Tag
+   the last old-generation commit before editing anything:
+   `git tag -a docs-gen-<n> -m "Docs generation <n>"`.
+3. Change `project.yaml.prefix` to a new, unused prefix.
+4. Write the new designs from the new architecture. Carry over a fact only if
+   it is still true; rewrite it under the new prefix. Carry over binding
+   decisions and still-current references the same way.
+5. Create the boundary `record` under the new prefix. List the old tag, old and
+   new prefixes, every removed ID with its outcome, carried-over mappings, and
+   the reset commits and verification.
+6. Classify every old document: carried over, replaced, or dropped. Drop
+   unfinished work. Update the docs README and remaining links. Delete the old
+   documents, obsolete assets, and generated files; leave no stubs, legacy
+   folders, or empty sections.
+7. Run `index` and `check`. A leftover old-prefix document fails validation.
+
+The boundary record and tag are mandatory, and the user must approve the reset
+before anything is deleted. Without the record and tag, the change is a deletion,
+not a reset. Do not use `supersedes` for a reset: the old documents are gone. Do
+not reset to avoid fixing a few documents; supersede those instead.
+
 ## Task workflow
 
 1. **Confirm the root and version.** Read `project.yaml` for `id`, `prefix`,
-   and `standard_version`. One root describes one project.
+   and `standard_version`. One root describes one project and one generation:
+   every document ID must use the current `prefix`.
 2. **Inspect before writing.**
 
    ```bash
-   npx @jk-97/engineering-docs@1.0.1 --root docs context
-   npx @jk-97/engineering-docs@1.0.1 --root docs list
-   npx @jk-97/engineering-docs@1.0.1 --root docs search <query>
+   npx @jk-97/engineering-docs@1.1.0 --root docs context
+   npx @jk-97/engineering-docs@1.1.0 --root docs list
+   npx @jk-97/engineering-docs@1.1.0 --root docs search <query>
    ```
 
    Reuse or update an existing document before adding a near-duplicate.
-3. **Apply the gate and route by intent.** Use the tables above and
+3. **Check for a pivot.** If the task follows a major architecture change, read
+   `PROCESS.md` 4.3 and 4.4. Do not extend a proposal whose target design is
+   superseded, and do not carry an unfinished plan into the new architecture.
+4. **Apply the gate and route by intent.** Use the tables above and
    `PROCESS.md` §5.
-4. **Scaffold with the CLI.** Do not invent an ID or hand-copy a template:
+5. **Scaffold with the CLI.** Do not invent an ID or hand-copy a template:
 
    ```bash
-   npx @jk-97/engineering-docs@1.0.1 --root docs new \
+   npx @jk-97/engineering-docs@1.1.0 --root docs new \
      --type <type> --status <status> --title "<title>"
    ```
 
    Add `--activation-trigger "..."` for a deferred proposal, `--commit <sha>`
    for a record, and `--issue <number-or-url>` or `--design <DES-ID>` for a
    proposal when known.
-5. **Write the document.** Fill every section in the created file. Use the
+6. **Write the document.** Fill every section in the created file. Use the
    project's prose language and English front matter keys, enums, IDs, and
    commit hashes. Update `updated` on each substantive edit; set
    `last_verified` only after checking code, documents, or commits.
-6. **Date with evidence.** `created` and `completed` come from the document, a
+7. **Date with evidence.** `created` and `completed` come from the document, a
    memo, a commit, or a PR; unknown is `null`; sources go in
    `created_source` / `completed_source`. Never use filesystem mtime and never
    write today's date as a historical completion date.
-7. **Connect it.** Add existing `related` IDs and reciprocal
+8. **Connect it.** Add existing `related` IDs and reciprocal
    `supersedes` / `superseded_by` links. Update the docs-root README when
    navigation changes; the README is optional.
-8. **Generate and validate.**
+9. **Generate and validate.**
 
    ```bash
-   npx @jk-97/engineering-docs@1.0.1 --root docs index
-   npx @jk-97/engineering-docs@1.0.1 --root docs check
+   npx @jk-97/engineering-docs@1.1.0 --root docs index
+   npx @jk-97/engineering-docs@1.1.0 --root docs check
    ```
 
    Fix source files until `check` passes. Treat warnings as review work; do not
    hand-edit generated files.
-9. **Report.** State the document ID and path, whether an Issue or proposal
-   owns the work, and the validation result.
+10. **Report.** State the document ID and path, whether an Issue or proposal
+    owns the work, and the validation result.
 
 ## CLI
 
@@ -180,7 +238,7 @@ Pin the CLI to the project's `standard_version` and run it from the repository
 root:
 
 ```bash
-npx @jk-97/engineering-docs@1.0.1 --root docs <command>
+npx @jk-97/engineering-docs@1.1.0 --root docs <command>
 ```
 
 If the package is installed in the project, the local `engdocs` binary is
@@ -191,7 +249,7 @@ engdocs --root docs <command>
 ```
 
 `--root` may appear before or after the subcommand; `DOCS_ROOT=docs` is
-equivalent. Replace `1.0.1` with the pinned version when the project declares
+equivalent. Replace `1.1.0` with the pinned version when the project declares
 another one. A docs root contains documents only: the CLI, the standard, and
 the templates are never copied into it.
 
@@ -206,7 +264,7 @@ the templates are never copied into it.
 | `index` | write `catalog.json` and `llms.txt`; `--check` reports drift |
 | `check` | validate front matter, IDs, dates, links, supersession, indexes |
 | `stale` | list documents with an old non-null `last_verified` |
-| `archive <ID> --by <ID>` | write reciprocal supersession links |
+| `archive <ID> --by <ID>` | write reciprocal supersession links inside one generation |
 | `install-skill` | install or refresh this skill and its `references/PROCESS.md`; `--repo <path>` targets a repository, `--force` reinstalls |
 | `standard` | print the package's canonical `PROCESS.md` |
 
@@ -231,7 +289,12 @@ When asked to audit rather than edit:
    body sections that belong to another type, broken `related` or supersession
    reciprocity, proposals that should be Issues, forbidden paths, and
    hand-edited generated files.
-6. Do not fix silently unless the user asked for fixes; report paths and IDs.
+6. Look for pivot and generation debt: active designs that describe an old
+   architecture, partial plans carried across a change, active proposals that
+   target superseded designs, mixed-generation prefixes, a generation reset
+   without a boundary record and tag, and superseded documents presented as
+   current.
+7. Do not fix silently unless the user asked for fixes; report paths and IDs.
 
 ## References
 

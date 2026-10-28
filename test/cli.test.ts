@@ -488,6 +488,67 @@ implementation: none
     expect(old.status).toBe("superseded");
     expect(old.superseded_by).toBe("EX-DES-003");
     expect(replacement.supersedes).toBe("EX-DES-002");
+
+    const index = run(["index", "--root", docs]);
+    expect(index.status, index.stderr).toBe(0);
+    const llms = readFileSync(path.join(docs, "llms.txt"), "utf8");
+    const historyAt = llms.indexOf("### History (not current guidance)");
+    expect(historyAt).toBeGreaterThan(-1);
+    expect(llms.slice(0, historyAt)).toContain("EX-DES-003");
+    expect(llms.slice(0, historyAt)).not.toContain("EX-DES-002");
+    expect(llms.slice(historyAt)).toContain("EX-DES-002");
+  });
+
+  it("warns when a proposal targets a superseded design", () => {
+    const { docs } = initRoot();
+    for (const [slug, title] of [["old", "Old"], ["new", "New"]]) {
+      const created = run([
+        "new",
+        "--root",
+        docs,
+        "--type",
+        "design",
+        "--status",
+        "active",
+        "--title",
+        title,
+        "--slug",
+        slug,
+      ]);
+      expect(created.status, created.stderr).toBe(0);
+    }
+    const archived = run([
+      "archive",
+      "EX-DES-002",
+      "--by",
+      "EX-DES-003",
+      "--root",
+      docs,
+    ]);
+    expect(archived.status, archived.stderr).toBe(0);
+    const proposal = run([
+      "new",
+      "--root",
+      docs,
+      "--type",
+      "proposal",
+      "--status",
+      "active",
+      "--title",
+      "Pivot",
+      "--slug",
+      "pivot",
+      "--design",
+      "EX-DES-002",
+    ]);
+    expect(proposal.status, proposal.stderr).toBe(0);
+
+    expect(run(["index", "--root", docs]).status).toBe(0);
+    const check = run(["check", "--root", docs]);
+    expect(check.status, check.stderr).toBe(0);
+    expect(check.stderr).toContain(
+      "targets superseded design EX-DES-002; close or re-scope this proposal",
+    );
   });
 });
 
